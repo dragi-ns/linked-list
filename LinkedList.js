@@ -3,36 +3,63 @@ import Node from './Node';
 export default function LinkedList() {
   let headNode = null;
   let tailNode = null;
-  let sizeNodes = 0;
+  let listSize = 0;
 
   function append(value) {
     const newNode = Node(value);
 
-    if (!headNode) {
+    if (listSize < 1) {
       headNode = newNode;
-    }
-
-    if (tailNode) {
+      tailNode = newNode;
+    } else {
       tailNode.setNext(newNode);
+      tailNode = newNode;
     }
-    tailNode = newNode;
 
-    sizeNodes += 1;
+    listSize += 1;
+    return newNode;
   }
 
   function prepend(value) {
     const newNode = Node(value);
 
-    if (!tailNode) {
+    if (listSize < 1) {
+      headNode = newNode;
       tailNode = newNode;
+    } else {
+      newNode.setNext(headNode);
+      headNode = newNode;
     }
 
-    if (headNode) {
-      headNode.setNext(newNode);
-    }
-    headNode = newNode;
+    listSize += 1;
+    return newNode;
+  }
 
-    sizeNodes += 1;
+  function insertAt(value, index) {
+    let previousNode = null;
+    let currentNode = headNode;
+    let currentIndex = 0;
+    while (currentIndex !== index) {
+      if (currentNode === null) {
+        currentNode = append(null);
+      }
+      previousNode = currentNode;
+      currentNode = previousNode.getNext();
+      currentIndex += 1;
+    }
+
+    if (previousNode === null) {
+      return prepend(value);
+    }
+
+    if (currentNode === null) {
+      return append(value);
+    }
+
+    const newNode = Node(value, currentNode);
+    previousNode.setNext(newNode);
+    listSize += 1;
+    return newNode;
   }
 
   function head() {
@@ -44,7 +71,7 @@ export default function LinkedList() {
   }
 
   function size() {
-    return sizeNodes;
+    return listSize;
   }
 
   function at(index) {
@@ -57,27 +84,51 @@ export default function LinkedList() {
     return currentNode;
   }
 
-  function pop() {
-    let currentNode = headNode;
-    let currentIndex = 0;
-    while (currentNode !== null && currentIndex < sizeNodes - 2) {
-      currentNode = currentNode.getNext();
-      currentIndex += 1;
+  function removeAt(index) {
+    if (listSize < 1 || listSize < index) {
+      return null;
     }
-    currentNode.setNext(null);
-    tailNode = currentNode;
-    sizeNodes -= 1;
+
+    if (index === 0) {
+      const oldHead = headNode;
+      headNode = oldHead.getNext();
+      listSize -= 1;
+      return oldHead;
+    }
+
+    const previousNode = at(index - 1);
+    const removedNode = previousNode.getNext();
+    const nextNode = removedNode.getNext();
+    if (tailNode === removedNode) {
+      tailNode = previousNode;
+      tailNode.setNext(null);
+    }
+    previousNode.setNext(nextNode);
+    listSize -= 1;
+
+    return removedNode;
+  }
+
+  function pop() {
+    if (listSize < 1) {
+      return null;
+    }
+
+    const oldTail = tailNode;
+    const newTail = at(listSize - 2);
+    tailNode = newTail;
+    tailNode.setNext(null);
+    listSize -= 1;
+    return oldTail;
   }
 
   function contains(value) {
     let currentNode = headNode;
-    let currentIndex = 0;
-    while (currentNode !== null && currentIndex < sizeNodes) {
+    while (currentNode !== null) {
       if (currentNode.getValue() === value) {
         return true;
       }
       currentNode = currentNode.getNext();
-      currentIndex += 1;
     }
     return false;
   }
@@ -85,7 +136,7 @@ export default function LinkedList() {
   function find(value) {
     let currentNode = headNode;
     let currentIndex = 0;
-    while (currentNode !== null && currentIndex < sizeNodes) {
+    while (currentNode !== null) {
       if (currentNode.getValue() === value) {
         return currentIndex;
       }
@@ -97,12 +148,10 @@ export default function LinkedList() {
 
   function toString() {
     let currentNode = headNode;
-    let currentIndex = 0;
     const values = [];
-    while (currentNode !== null && currentIndex < sizeNodes) {
+    while (currentNode !== null) {
       values.push(`( ${currentNode.getValue()} )`);
       currentNode = currentNode.getNext();
-      currentIndex += 1;
     }
     if (values.length > 1) {
       values.push('null');
@@ -113,10 +162,12 @@ export default function LinkedList() {
   return {
     append,
     prepend,
+    insertAt,
+    at,
+    removeAt,
     head,
     tail,
     size,
-    at,
     pop,
     contains,
     find,
